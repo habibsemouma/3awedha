@@ -2,6 +2,11 @@ from flask import Flask, render_template,g, request
 import os
 import sqlite3
 import win32print
+import pathlib
+import printfactory
+
+printer = printfactory.Printer()
+print_tool = printfactory.AdobeReader(printer,app_path=pathlib.Path(r"C:\Program Files\Adobe\Acrobat DC\Acrobat\Acrobat.exe"))
 
 def print_files(file_paths):
     for file_path in file_paths:
@@ -51,7 +56,8 @@ def get_files_by_folder(root_dir):
 def hello():
     if request.method == 'POST':
         files = request.form.getlist('files')
-        print("activated",files)
+        filess = pathlib.Path('dummy.pdf')
+        print_tool.print_file(filess)
 
     else:
         result={}

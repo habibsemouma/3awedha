@@ -7,18 +7,18 @@
       href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
       rel="stylesheet"
     />
-
     <title>Flask Template Example</title>
   </head>
   <body>
     <form method="post" class="flex flex-col gap-4 p-4">
       <div class="w-full flex ">
-        <button type="submit"
+        <button type="submit" 
           class="bg-purple-600 text-white p-2 font-bold rounded-md shadow-md"
         >
           Print
         </button>
       </div>
+      <div id="pdf-viewer"></div>
       {% for category,files in result.items() %} {% if files %}
       <div class="border p-4 flex flex-col gap-2">
         <h1>{{ category }}</h1>
@@ -31,6 +31,8 @@
       </div>
       {% endif %} {% endfor %}
     </form>
+
+
 
   </body>
 </html>
