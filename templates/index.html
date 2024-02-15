@@ -24,8 +24,9 @@
         <h1>{{ category }}</h1>
         {% for file in files %}
         <div class="flex justify-around">
-          <p class="ml-8">{{ file[1] }}</p>
-          <input value="{{ file[0] }}" name="files" type="checkbox" />
+          <p class="ml-8">{{file[1]}}</p>
+          <p class="ml-8">{{file[2]}}</p>
+          <input value="{{file[2]}}" name="files" type="checkbox" />
         </div>
         {% endfor %}
       </div>
