@@ -3,7 +3,7 @@ from utils import *
 
 def parent_name(id_):
     return Folder.query.get(id_).name
-
+extensions=['png',"jpg","jpeg"]
 
 @app.route('/',methods=['GET', 'POST'])
 def index():
@@ -16,10 +16,16 @@ def index():
         search_query = request.form.get('search_query', '')
         file_ids = request.form.get('file_ids', '').split(",")
         if file_ids[0]!="":
-            files=[File.query.get(id_) for id_ in file_ids]
-            paths=[file.path for file in files]
-            merge_pdfs(paths,"temp/output.pdf")
-            return render_template("success.html")
+            try:
+                files=[File.query.get(id_) for id_ in file_ids]
+                paths=[file.path for file in files]
+                pdfs=[path for path in paths if path.endswith(".pdf")]
+                images=[path for path in paths if path.split(".")[-1].lower() in extensions]
+                merge_pdfs(pdfs,images,"temp/output.pdf")
+                return render_template("success.html")
+        
+            except:
+                return render_template("index.html",result=result,error="Erreur")
         else:
             filtered_result = {}
             for folder, files in result.items():

@@ -2,6 +2,9 @@ from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 import os
 import PyPDF2
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from PIL import Image
 
 
 app = Flask(__name__)
@@ -42,12 +45,19 @@ def traverse_folder(folder,parent):
         
 
 
-def merge_pdfs(pdf_list, output_filename):
+def merge_pdfs(pdf_list, image_list, output_filename):
     merger = PyPDF2.PdfMerger()
     
     for pdf in pdf_list:
         merger.append(pdf)
+    print(image_list)
+    
+    for img_path in image_list:
+
+        img = Image.open(img_path)
+        pdf_path = img_path.replace('.jpg', '.pdf') 
+        img.save(pdf_path, 'PDF')
+        merger.append(pdf_path)
     
     with open(output_filename, 'wb') as output_file:
         merger.write(output_file)
-
