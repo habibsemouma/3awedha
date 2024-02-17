@@ -1,77 +1,42 @@
-from flask import Flask, render_template,g, request,jsonify
-import os
-import sqlite3
-import win32print
-import pathlib
-import printfactory
-import PyPDF2
-
-printer = printfactory.Printer()
-print_tool = printfactory.AdobeReader(printer,app_path=pathlib.Path(r"C:\Program Files\Adobe\Acrobat DC\Acrobat\Acrobat.exe"))
+from utils import *
 
 
-app = Flask(__name__)
-DATABASE = 'database.sqlite'
-def get_db():
-    db = getattr(g, '_database', None)
-    if db is None:
-        db = g._database = sqlite3.connect(DATABASE)
-    return db
+def parent_name(id_):
+    return Folder.query.get(id_).name
 
-@app.teardown_appcontext
-def close_connection(exception):
-    db = getattr(g, '_database', None)
-    if db is not None:
-        db.close()
 
-def get_files_by_folder(root_dir):
-    db = get_db()
-    cur = db.cursor()
-    cur.execute("drop table if exists files")
-    cur.execute('create table if not exists files( id integer primary key,name text,category text,specificity text,file_path text) ')
-    for category in os.listdir(root_dir):
-        for specificity in os.listdir(f"{root_dir}/{category}"):
-            if os.path.isfile(f"{root_dir}/{category}/{specificity}"):
-                file_path=f"{root_dir}/{category}/{specificity}"
-                cur.execute(f"insert into files(name,category,file_path) values(?,?,?)",(specificity, category,file_path))
-            else:
-                for final in os.listdir(f"{root_dir}/{category}/{specificity}"):
-                     file_path=f"{root_dir}/{category}/{specificity}/{final}"
-                     cur.execute(f"insert into files(name,category,specificity,file_path) values(?,?,?,?)",(final, category, specificity,file_path))
+@app.route('/',methods=['GET', 'POST'])
+def index():
+    result={}
+    folders = Folder.query.all()
+    for folder in folders:
+        result[folder.name]=[{"name":file.name,"id":file.id} for file in File.query.filter_by(folder_id=folder.id).all()]
     
-    cur.close()
-    cur=db.cursor()
-    cur.execute("SELECT category,GROUP_CONCAT(id, ', '), GROUP_CONCAT(name, ', '), GROUP_CONCAT(file_path, ', ') FROM files GROUP BY category")
-    rows=cur.fetchall()
-    return rows
-
-
-def merge_pdfs(file_paths, output_path):
-    merger = PyPDF2.PdfMerger()
-    for file_path in file_paths:
-        merger.append(file_path)
-    merger.write(output_path)
-    merger.close()
-    return(output_path)
-
-
-@app.route('/', methods=['GET', 'POST'])
-def hello():
     if request.method == 'POST':
-        file_paths = request.form.getlist('files')
-        final=merge_pdfs([x.replace(" ","",1) for x in file_paths],"temp/output.pdf")
-        print_tool.print_file(pathlib.Path(final))
-        return jsonify({"success":True})
+        search_query = request.form.get('search_query', '')
+        file_ids = request.form.get('file_ids', '').split(",")
+        if file_ids[0]!="":
+            files=[File.query.get(id_) for id_ in file_ids]
+            paths=[file.path for file in files]
+            merge_pdfs(paths,"temp/output.pdf")
+            return render_template("success.html")
+        else:
+            filtered_result = {}
+            for folder, files in result.items():
+                if search_query.lower() in folder.lower():
+                    filtered_result[folder] = files
+                else:
+                    filtered_files = [file for file in files if search_query.lower() in file['name'].lower()]
+                    if filtered_files:
+                        filtered_result[folder] = filtered_files
 
-    else:
-        result={}
-        rows=get_files_by_folder('testfolder')
-        for row in rows:
-            category=row[0]
-            result[category]=[]
-            for (identifier,name,file_path) in zip(row[1].split(","),row[2].split(","),row[3].split(",")):
-                result[category].append([identifier,name,file_path])
-        return render_template('index.html', result=result)
+    elif request.method == 'GET':filtered_result=result
+
+    return render_template("index.html",result=filtered_result)
 
 if __name__ == '__main__':
+    with app.app_context():
+        db.drop_all()
+        db.create_all()  
+        traverse_folder("testfolder",None)
     app.run(debug=True)

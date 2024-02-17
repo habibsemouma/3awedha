@@ -1,39 +1,56 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link
-      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
-      rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+        rel="stylesheet"
     />
     <title>Flask Template Example</title>
-  </head>
-  <body>
-    <form method="post" class="flex flex-col gap-4 p-4">
-      <div class="w-full flex ">
+</head>
+<body>
+<form method="post" class="flex flex-col gap-4 p-4">
+
+    <div class="w-full flex ">
+        <input type="text" name="search_query" placeholder="Search..." class="p-2 border border-gray-300 rounded-md shadow-md" />
+        <input type="hidden" name="file_ids" id="file-ids" value="">
         <button type="submit" 
-          class="bg-purple-600 text-white p-2 font-bold rounded-md shadow-md"
+                class="bg-purple-600 text-white p-2 font-bold rounded-md shadow-md"
         >
-          Print
+            Search
         </button>
-      </div>
-      <div id="pdf-viewer"></div>
-      {% for category,files in result.items() %} {% if files %}
-      <div class="border p-4 flex flex-col gap-2">
-        <h1>{{ category }}</h1>
-        {% for file in files %}
-        <div class="flex justify-around">
-          <p class="ml-8">{{file[1]}}</p>
-          <p class="ml-8">{{file[2]}}</p>
-          <input value="{{file[2]}}" name="files" type="checkbox" />
+    </div>
+
+    {% for folder,files in result.items() %} 
+    {% if files %}
+
+    <div class="border p-4 flex flex-col gap-2">
+        <h1>{{folder}}</h1>
+        {% for file in files %} 
+        <div class="border p-4 flex flex-col gap-2">
+            <h1>{{file.name}}</h1>
+            <input type="checkbox" name="file_id" value="{{file.id}}" class="file-checkbox">
+
         </div>
+
         {% endfor %}
-      </div>
-      {% endif %} {% endfor %}
-    </form>
+    </div>
+    {% endif %}
+    {% endfor %}
+</div>
+</form>
+</body>
 
-
-
-  </body>
+<script>
+  const checkboxes = document.querySelectorAll('.file-checkbox');
+  checkboxes.forEach((checkbox) => {
+      checkbox.addEventListener('change', () => {
+          const selectedFileIds = Array.from(checkboxes)
+              .filter((checkbox) => checkbox.checked)
+              .map((checkbox) => checkbox.value);
+          document.getElementById('file-ids').value = selectedFileIds.join(',');
+      });
+  });
+</script>
 </html>
