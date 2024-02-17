@@ -50,7 +50,6 @@ def merge_pdfs(pdf_list, image_list, output_filename):
     
     for pdf in pdf_list:
         merger.append(pdf)
-    print(image_list)
     
     for img_path in image_list:
 
